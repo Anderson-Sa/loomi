@@ -1,7 +1,9 @@
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { formatPriceCents } from "@/lib/format";
+import { formatInstallments, formatPriceCents } from "@/lib/format";
+import { getAudienceName } from "@/lib/audience";
 import { AddToCartForm } from "@/components/AddToCartForm";
 
 export default async function ProdutoPage({
@@ -20,6 +22,20 @@ export default async function ProdutoPage({
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
+      <nav className="mb-6 text-xs text-neutral-500">
+        <Link href="/" className="hover:text-brand">
+          Vitrine
+        </Link>
+        <span className="mx-2">/</span>
+        <Link href={`/#${produto.audience}`} className="hover:text-brand">
+          {getAudienceName(produto.audience)}
+        </Link>
+        <span className="mx-2">/</span>
+        <span className="text-neutral-800">{produto.category.name}</span>
+        <span className="mx-2">/</span>
+        <span className="text-neutral-800">{produto.name}</span>
+      </nav>
+
       <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
         <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-neutral-100">
           <Image
@@ -33,11 +49,16 @@ export default async function ProdutoPage({
         </div>
 
         <div className="max-w-md">
-          <p className="text-sm uppercase tracking-wide text-neutral-500">
+          <p className="text-sm font-semibold uppercase tracking-wide text-brand">
             {produto.category.name}
           </p>
           <h1 className="mt-1 text-2xl font-semibold">{produto.name}</h1>
-          <p className="mt-3 text-xl">{formatPriceCents(produto.priceCents)}</p>
+          <p className="mt-3 text-3xl font-bold text-brand">
+            {formatPriceCents(produto.priceCents)}
+          </p>
+          <p className="mt-1 text-sm text-neutral-500">
+            {formatInstallments(produto.priceCents)}
+          </p>
           <p className="mt-4 text-sm leading-relaxed text-neutral-600">
             {produto.description}
           </p>
