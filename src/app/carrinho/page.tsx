@@ -35,7 +35,7 @@ export default function CarrinhoPage() {
         <h1 className="text-2xl font-semibold">Seu carrinho está vazio</h1>
         <Link
           href="/"
-          className="mt-6 inline-block rounded-md bg-black px-6 py-3 text-sm font-medium text-white"
+          className="mt-6 inline-block rounded-md bg-brand px-6 py-3 text-sm font-semibold text-white hover:bg-brand-dark"
         >
           Ver vitrine
         </Link>
@@ -65,7 +65,7 @@ export default function CarrinhoPage() {
                   <p className="font-medium">{item.name}</p>
                   <p className="text-sm text-neutral-500">Tamanho: {item.size}</p>
                 </div>
-                <p className="font-medium">
+                <p className="font-bold text-brand">
                   {formatPriceCents(item.priceCents * item.quantity)}
                 </p>
               </div>
@@ -106,7 +106,7 @@ export default function CarrinhoPage() {
 
       <div className="mt-8 flex items-center justify-between border-t border-neutral-200 pt-6">
         <span className="text-lg font-medium">Total</span>
-        <span className="text-lg font-semibold">{formatPriceCents(totalCents)}</span>
+        <span className="text-xl font-bold text-brand">{formatPriceCents(totalCents)}</span>
       </div>
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
@@ -115,7 +115,7 @@ export default function CarrinhoPage() {
         type="button"
         onClick={handleCheckout}
         disabled={loading}
-        className="mt-6 w-full rounded-md bg-black px-6 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="mt-6 w-full rounded-md bg-brand px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
       >
         {loading ? "Redirecionando..." : "Finalizar compra"}
       </button>

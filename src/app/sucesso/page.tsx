@@ -20,7 +20,7 @@ export default function SucessoPage() {
       </p>
       <Link
         href="/"
-        className="mt-8 inline-block rounded-md bg-black px-6 py-3 text-sm font-medium text-white"
+        className="mt-8 inline-block rounded-md bg-brand px-6 py-3 text-sm font-semibold text-white hover:bg-brand-dark"
       >
         Voltar à vitrine
       </Link>

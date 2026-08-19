@@ -4,3 +4,8 @@ export function formatPriceCents(cents: number) {
     currency: "BRL",
   });
 }
+
+export function formatInstallments(cents: number, maxInstallments = 3) {
+  const installmentCents = Math.round(cents / maxInstallments);
+  return `${maxInstallments}x de ${formatPriceCents(installmentCents)} sem juros`;
+}

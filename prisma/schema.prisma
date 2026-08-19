@@ -27,6 +27,7 @@ model Product {
   priceCents  Int
   imageUrl    String
   sizes       String
+  audience    String      @default("feminino")
   stock       Int         @default(100)
   categoryId  String
   category    Category    @relation(fields: [categoryId], references: [id])
