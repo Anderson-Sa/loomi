@@ -27,6 +27,8 @@ type CartContextValue = {
   clear: () => void;
   totalCents: number;
   totalQuantity: number;
+  /** true quando o carrinho já terminou de ler o localStorage (evita corridas com efeitos que dependem do estado inicial). */
+  hydrated: boolean;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -45,6 +47,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hidrata o carrinho do localStorage, que só existe no client (evita mismatch de SSR)
         setItems(JSON.parse(raw));
       } catch {
         // ignora carrinho corrompido
@@ -116,6 +119,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clear,
         totalCents,
         totalQuantity,
+        hydrated,
       }}
     >
       {children}
