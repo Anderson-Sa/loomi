@@ -28,6 +28,17 @@ async function resolveImageUrl(formData: FormData, currentImageUrl?: string) {
   return currentImageUrl ?? null;
 }
 
+async function saveAdditionalImages(formData: FormData) {
+  const files = formData.getAll("additionalImages").filter(
+    (f): f is File => f instanceof File && f.size > 0
+  );
+  const urls: string[] = [];
+  for (const file of files) {
+    urls.push(await saveUploadedImage(file));
+  }
+  return urls;
+}
+
 async function buildProductData(formData: FormData, currentImageUrl?: string) {
   const name = String(formData.get("name") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
@@ -104,7 +115,21 @@ export async function createProduct(
   const existing = await prisma.product.findUnique({ where: { slug: result.data.slug } });
   if (existing) return { error: "Já existe um produto com esse nome/slug." };
 
-  await prisma.product.create({ data: result.data });
+  let additionalImageUrls: string[];
+  try {
+    additionalImageUrls = await saveAdditionalImages(formData);
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Falha ao salvar imagens adicionais." };
+  }
+
+  await prisma.product.create({
+    data: {
+      ...result.data,
+      images: {
+        create: additionalImageUrls.map((url, index) => ({ url, position: index })),
+      },
+    },
+  });
 
   revalidatePath("/");
   revalidatePath("/admin/produtos");
@@ -129,12 +154,42 @@ export async function updateProduct(
     if (existing) return { error: "Já existe um produto com esse nome/slug." };
   }
 
-  await prisma.product.update({ where: { id }, data: result.data });
+  let additionalImageUrls: string[];
+  try {
+    additionalImageUrls = await saveAdditionalImages(formData);
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Falha ao salvar imagens adicionais." };
+  }
+
+  const existingImageCount = await prisma.productImage.count({ where: { productId: id } });
+
+  await prisma.product.update({
+    where: { id },
+    data: {
+      ...result.data,
+      images: {
+        create: additionalImageUrls.map((url, index) => ({
+          url,
+          position: existingImageCount + index,
+        })),
+      },
+    },
+  });
 
   revalidatePath("/");
   revalidatePath("/admin/produtos");
   revalidatePath(`/produto/${result.data.slug}`);
   redirect("/admin/produtos");
+}
+
+export async function deleteProductImage(imageId: string) {
+  if (!(await isAdminSessionValid())) throw new Error("Sessão expirada. Faça login novamente.");
+
+  const image = await prisma.productImage.delete({ where: { id: imageId } });
+
+  revalidatePath("/");
+  revalidatePath("/admin/produtos");
+  revalidatePath(`/admin/produtos/${image.productId}/editar`);
 }
 
 export async function deleteProduct(id: string) {

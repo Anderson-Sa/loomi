@@ -3,8 +3,11 @@
 import { useActionState, useState } from "react";
 import { slugify } from "@/lib/slugify";
 import type { ProductFormState } from "./actions";
+import { deleteProductImage } from "./actions";
 
 type Category = { id: string; name: string };
+
+type ExistingImage = { id: string; url: string };
 
 type InitialData = {
   name: string;
@@ -18,6 +21,7 @@ type InitialData = {
   stock: number;
   imageUrl: string;
   featured: boolean;
+  images?: ExistingImage[];
 };
 
 type Props = {
@@ -44,6 +48,7 @@ export function ProductForm({ action, categories, initialData, submitLabel }: Pr
   const [slug, setSlug] = useState(initialData?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(initialData));
   const [preview, setPreview] = useState<string | null>(initialData?.imageUrl ?? null);
+  const [additionalPreviews, setAdditionalPreviews] = useState<string[]>([]);
 
   function handleNameChange(value: string) {
     setName(value);
@@ -53,6 +58,11 @@ export function ProductForm({ action, categories, initialData, submitLabel }: Pr
   function handleImageChange(fileList: FileList | null) {
     const file = fileList?.[0];
     if (file) setPreview(URL.createObjectURL(file));
+  }
+
+  function handleAdditionalImagesChange(fileList: FileList | null) {
+    const files = Array.from(fileList ?? []);
+    setAdditionalPreviews(files.map((file) => URL.createObjectURL(file)));
   }
 
   return (
@@ -232,6 +242,56 @@ export function ProductForm({ action, categories, initialData, submitLabel }: Pr
             />
           </div>
         </div>
+      </div>
+
+      <div>
+        <span className="mb-1 block text-sm font-medium">Fotos adicionais</span>
+
+        {initialData?.images && initialData.images.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-3">
+            {initialData.images.map((image) => (
+              <div key={image.id} className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element -- prévia simples de imagem já salva localmente */}
+                <img
+                  src={image.url}
+                  alt=""
+                  className="h-20 w-20 rounded-md bg-neutral-100 object-cover"
+                />
+                <form action={deleteProductImage.bind(null, image.id)}>
+                  <button
+                    type="submit"
+                    title="Remover foto"
+                    className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-neutral-900 text-xs text-white hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                </form>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <input
+          type="file"
+          name="additionalImages"
+          accept="image/png,image/jpeg,image/webp"
+          multiple
+          onChange={(e) => handleAdditionalImagesChange(e.target.files)}
+          className="block w-full text-sm"
+        />
+        {additionalPreviews.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-3">
+            {additionalPreviews.map((src, index) => (
+              // eslint-disable-next-line @next/next/no-img-element -- prévia local via blob: URL
+              <img
+                key={index}
+                src={src}
+                alt=""
+                className="h-20 w-20 rounded-md bg-neutral-100 object-cover"
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <label className="flex items-center gap-2 text-sm font-medium">

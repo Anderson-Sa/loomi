@@ -10,7 +10,10 @@ export default async function EditarProdutoPage({
   const { id } = await params;
 
   const [produto, categories] = await Promise.all([
-    prisma.product.findUnique({ where: { id } }),
+    prisma.product.findUnique({
+      where: { id },
+      include: { images: { orderBy: { position: "asc" } } },
+    }),
     prisma.category.findMany({ orderBy: { name: "asc" } }),
   ]);
 
@@ -40,6 +43,7 @@ export default async function EditarProdutoPage({
           stock: produto.stock,
           imageUrl: produto.imageUrl,
           featured: produto.featured,
+          images: produto.images,
         }}
       />
     </div>

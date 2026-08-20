@@ -4,12 +4,53 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/context/CartContext";
+import { useCustomer } from "@/context/CustomerContext";
 import { formatPriceCents } from "@/lib/format";
 
 export default function CarrinhoPage() {
   const { items, updateQuantity, removeItem, totalCents } = useCart();
+  const customer = useCustomer();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [couponInput, setCouponInput] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPercent: number } | null>(
+    null
+  );
+
+  const discountCents = appliedCoupon
+    ? Math.round((totalCents * appliedCoupon.discountPercent) / 100)
+    : 0;
+  const finalTotalCents = totalCents - discountCents;
+
+  async function handleApplyCoupon() {
+    if (!couponInput.trim()) return;
+    setCouponLoading(true);
+    setCouponError(null);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponInput }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Cupom inválido");
+      setAppliedCoupon({ code: data.code, discountPercent: data.discountPercent });
+    } catch (e) {
+      setAppliedCoupon(null);
+      setCouponError(e instanceof Error ? e.message : "Erro desconhecido");
+    } finally {
+      setCouponLoading(false);
+    }
+  }
+
+  function handleRemoveCoupon() {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError(null);
+  }
 
   async function handleCheckout() {
     setLoading(true);
@@ -18,7 +59,7 @@ export default function CarrinhoPage() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ items, couponCode: appliedCoupon?.code }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Falha ao iniciar checkout");
@@ -104,21 +145,83 @@ export default function CarrinhoPage() {
         ))}
       </ul>
 
-      <div className="mt-8 flex items-center justify-between border-t border-neutral-200 pt-6">
-        <span className="text-lg font-medium">Total</span>
-        <span className="text-xl font-bold text-brand">{formatPriceCents(totalCents)}</span>
+      <div className="mt-8 border-t border-neutral-200 pt-6">
+        {appliedCoupon ? (
+          <div className="flex items-center justify-between rounded-md bg-green-50 px-3 py-2 text-sm">
+            <span className="text-green-700">
+              Cupom <strong>{appliedCoupon.code}</strong> aplicado ({appliedCoupon.discountPercent}% off)
+            </span>
+            <button
+              type="button"
+              onClick={handleRemoveCoupon}
+              className="text-neutral-500 underline hover:text-black"
+            >
+              Remover
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={couponInput}
+              onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+              placeholder="Código do cupom"
+              className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm uppercase outline-none focus:border-brand"
+            />
+            <button
+              type="button"
+              onClick={handleApplyCoupon}
+              disabled={couponLoading || !couponInput.trim()}
+              className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:border-brand hover:text-brand disabled:opacity-50"
+            >
+              {couponLoading ? "Aplicando..." : "Aplicar"}
+            </button>
+          </div>
+        )}
+        {couponError && <p className="mt-2 text-sm text-red-600">{couponError}</p>}
+      </div>
+
+      <div className="mt-4 space-y-2 border-t border-neutral-200 pt-4">
+        <div className="flex items-center justify-between text-sm text-neutral-600">
+          <span>Subtotal</span>
+          <span>{formatPriceCents(totalCents)}</span>
+        </div>
+        {appliedCoupon && (
+          <div className="flex items-center justify-between text-sm text-green-700">
+            <span>Desconto ({appliedCoupon.discountPercent}%)</span>
+            <span>−{formatPriceCents(discountCents)}</span>
+          </div>
+        )}
+        <div className="flex items-center justify-between pt-2">
+          <span className="text-lg font-medium">Total</span>
+          <span className="text-xl font-bold text-brand">{formatPriceCents(finalTotalCents)}</span>
+        </div>
       </div>
 
       {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
 
-      <button
-        type="button"
-        onClick={handleCheckout}
-        disabled={loading}
-        className="mt-6 w-full rounded-md bg-brand px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
-      >
-        {loading ? "Redirecionando..." : "Finalizar compra"}
-      </button>
+      {customer ? (
+        <button
+          type="button"
+          onClick={handleCheckout}
+          disabled={loading}
+          className="mt-6 w-full rounded-md bg-brand px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+        >
+          {loading ? "Redirecionando..." : "Finalizar compra"}
+        </button>
+      ) : (
+        <div className="mt-6 rounded-md border border-neutral-200 bg-surface-muted p-4 text-center">
+          <p className="text-sm text-neutral-600">
+            Entre na sua conta para finalizar a compra.
+          </p>
+          <Link
+            href="/conta/login?redirect=/carrinho"
+            className="mt-3 inline-block w-full rounded-md bg-brand px-6 py-3 text-sm font-semibold text-white hover:bg-brand-dark"
+          >
+            Entrar e finalizar compra
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

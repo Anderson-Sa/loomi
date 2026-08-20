@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="mt-20 border-t border-neutral-200 bg-surface-muted">
       <div className="mx-auto max-w-6xl px-6 py-12">
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-5">
           <div>
             <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide">
               Públicos
@@ -34,6 +34,29 @@ export function Footer() {
               <li>
                 <Link href="/" className="hover:text-brand">
                   Vitrine
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide">
+              Institucional
+            </h3>
+            <ul className="space-y-2 text-sm text-neutral-600">
+              <li>
+                <Link href="/trocas-e-devolucoes" className="hover:text-brand">
+                  Trocas e devoluções
+                </Link>
+              </li>
+              <li>
+                <Link href="/termos-de-uso" className="hover:text-brand">
+                  Termos de uso
+                </Link>
+              </li>
+              <li>
+                <Link href="/politica-de-privacidade" className="hover:text-brand">
+                  Privacidade
                 </Link>
               </li>
             </ul>
