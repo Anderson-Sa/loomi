@@ -1,5 +1,18 @@
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/ProductCard";
+
+export async function generateMetadata({
+  searchParams,
+}: PageProps<"/busca">): Promise<Metadata> {
+  const { q } = await searchParams;
+  const query = typeof q === "string" ? q.trim() : "";
+
+  return {
+    title: query ? `Busca por "${query}" — Loomi` : "Buscar produtos — Loomi",
+    robots: { index: false, follow: true },
+  };
+}
 
 export default async function BuscaPage({ searchParams }: PageProps<"/busca">) {
   const { q } = await searchParams;
