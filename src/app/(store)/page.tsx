@@ -1,17 +1,30 @@
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { ProductCard } from "@/components/ProductCard";
+import { FeaturedCarousel } from "@/components/FeaturedCarousel";
 import { AUDIENCES } from "@/lib/audience";
+import { isCampaignActiveNow } from "@/lib/pricing";
 
 export default async function HomePage() {
   const produtos = await prisma.product.findMany({
+    include: { campaign: true },
     orderBy: { name: "asc" },
   });
+
+  const activeCampaigns = new Map<string, (typeof produtos)[number]["campaign"]>();
+  for (const produto of produtos) {
+    if (produto.campaign && isCampaignActiveNow(produto.campaign) && !activeCampaigns.has(produto.campaign.id)) {
+      activeCampaigns.set(produto.campaign.id, produto.campaign);
+    }
+  }
+  const campaignBanner = [...activeCampaigns.values()][0];
 
   const produtosPorPublico = AUDIENCES.map((audience) => ({
     ...audience,
     produtos: produtos.filter((produto) => produto.audience === audience.slug),
   }));
+
+  const destaques = produtos.filter((produto) => produto.featured);
 
   return (
     <div>
@@ -50,6 +63,14 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {campaignBanner && (
+        <section className="bg-black py-3 text-center text-white">
+          <p className="text-sm font-semibold uppercase tracking-wide">
+            {campaignBanner.name} — {campaignBanner.discountPercent}% off em peças selecionadas
+          </p>
+        </section>
+      )}
+
       <section className="mx-auto max-w-6xl px-6 py-8">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {AUDIENCES.map((audience) => (
@@ -79,6 +100,8 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {destaques.length > 0 && <FeaturedCarousel items={destaques} />}
+
       <div className="mx-auto max-w-6xl px-6 py-12">
         {produtosPorPublico.map((audience) => (
           <section key={audience.slug} id={audience.slug} className="mb-16 scroll-mt-32">
@@ -95,6 +118,8 @@ export default async function HomePage() {
                   name={produto.name}
                   imageUrl={produto.imageUrl}
                   priceCents={produto.priceCents}
+                  promoPriceCents={produto.promoPriceCents}
+                  campaign={produto.campaign}
                 />
               ))}
             </div>
