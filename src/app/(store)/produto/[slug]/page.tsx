@@ -1,4 +1,4 @@
-import Image from "next/image";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -6,6 +6,33 @@ import { formatInstallments, formatPriceCents } from "@/lib/format";
 import { getAudienceName } from "@/lib/audience";
 import { getEffectivePriceCents } from "@/lib/pricing";
 import { AddToCartForm } from "@/components/AddToCartForm";
+import { ProductGallery } from "@/components/ProductGallery";
+
+export async function generateMetadata({
+  params,
+}: PageProps<"/produto/[slug]">): Promise<Metadata> {
+  const { slug } = await params;
+
+  const produto = await prisma.product.findUnique({
+    where: { slug },
+    select: { name: true, description: true, imageUrl: true, priceCents: true, promoPriceCents: true },
+  });
+
+  if (!produto) return { title: "Produto não encontrado — Loomi" };
+
+  const price = formatPriceCents(produto.promoPriceCents ?? produto.priceCents);
+  const title = `${produto.name} — ${price} | Loomi`;
+
+  return {
+    title,
+    description: produto.description,
+    openGraph: {
+      title,
+      description: produto.description,
+      images: [{ url: produto.imageUrl }],
+    },
+  };
+}
 
 export default async function ProdutoPage({
   params,
@@ -14,12 +41,13 @@ export default async function ProdutoPage({
 
   const produto = await prisma.product.findUnique({
     where: { slug },
-    include: { category: true, campaign: true },
+    include: { category: true, campaign: true, images: { orderBy: { position: "asc" } } },
   });
 
   if (!produto) notFound();
 
   const sizes = produto.sizes.split(",").map((s) => s.trim());
+  const galleryImages = [produto.imageUrl, ...produto.images.map((img) => img.url)];
   const effectivePriceCents = getEffectivePriceCents(produto);
   const onSale = effectivePriceCents < produto.priceCents;
 
@@ -40,16 +68,7 @@ export default async function ProdutoPage({
       </nav>
 
       <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
-        <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-neutral-100">
-          <Image
-            src={produto.imageUrl}
-            alt={produto.name}
-            fill
-            sizes="(min-width: 768px) 50vw, 100vw"
-            className="object-cover"
-            priority
-          />
-        </div>
+        <ProductGallery images={galleryImages} alt={produto.name} />
 
         <div className="max-w-md">
           <p className="text-sm font-semibold uppercase tracking-wide text-brand">

@@ -122,9 +122,14 @@ export default async function AdminDashboardPage() {
         </div>
 
         <div className="rounded-lg border border-neutral-200 bg-white p-5">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-neutral-500">
-            Pedidos recentes
-          </h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">
+              Pedidos recentes
+            </h2>
+            <Link href="/admin/pedidos" className="text-xs font-medium text-brand hover:underline">
+              Ver todos
+            </Link>
+          </div>
           {recentOrders.length === 0 ? (
             <p className="text-sm text-neutral-400">Nenhum pedido ainda.</p>
           ) : (

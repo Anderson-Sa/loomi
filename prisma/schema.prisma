@@ -37,6 +37,15 @@ model Product {
   campaign    Campaign?   @relation(fields: [campaignId], references: [id])
   createdAt   DateTime    @default(now())
   orderItems  OrderItem[]
+  images      ProductImage[]
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  url       String
+  position  Int     @default(0)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Campaign {
@@ -51,15 +60,49 @@ model Campaign {
   products        Product[]
 }
 
+model Coupon {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  discountPercent Int
+  maxUses         Int?
+  usedCount       Int       @default(0)
+  expiresAt       DateTime?
+  active          Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+}
+
+model Customer {
+  id                  String    @id @default(cuid())
+  name                String
+  email               String    @unique
+  passwordHash        String
+  resetToken          String?   @unique
+  resetTokenExpiresAt DateTime?
+  createdAt           DateTime  @default(now())
+  orders              Order[]
+}
+
 model Order {
-  id              String      @id @default(cuid())
-  customerName    String
-  customerEmail   String
-  totalCents      Int
-  status          String      @default("pending")
-  stripeSessionId String?     @unique
-  createdAt       DateTime    @default(now())
-  items           OrderItem[]
+  id                 String      @id @default(cuid())
+  customerId         String
+  customer           Customer    @relation(fields: [customerId], references: [id])
+  customerName       String
+  customerEmail      String
+  totalCents         Int
+  status             String      @default("pending")
+  stripeSessionId    String?     @unique
+  couponCode         String?
+  discountCents      Int         @default(0)
+  shippingName       String?
+  shippingLine1      String?
+  shippingLine2      String?
+  shippingCity       String?
+  shippingState      String?
+  shippingPostalCode String?
+  shippingCountry    String?
+  shippedAt          DateTime?
+  createdAt          DateTime    @default(now())
+  items              OrderItem[]
 }
 
 model OrderItem {

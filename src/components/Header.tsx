@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import { useCustomer } from "@/context/CustomerContext";
 import { AUDIENCES } from "@/lib/audience";
 
 export function Header() {
   const { totalQuantity } = useCart();
+  const customer = useCustomer();
 
   return (
     <header className="sticky top-0 z-10 bg-white shadow-sm">
@@ -21,15 +23,33 @@ export function Header() {
           Loomi
         </Link>
 
-        <div className="hidden flex-1 sm:block">
+        <form action="/busca" className="hidden flex-1 sm:block">
           <input
             type="search"
+            name="q"
             placeholder="Buscar produtos, categorias..."
             className="w-full rounded-full border border-neutral-300 bg-surface-muted px-4 py-2 text-sm outline-none focus:border-brand"
           />
-        </div>
+        </form>
 
         <nav className="ml-auto flex items-center gap-5 text-sm">
+          <Link
+            href={customer ? "/conta" : "/conta/login"}
+            className="hidden items-center gap-1.5 font-medium hover:text-brand sm:flex"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-6 w-6"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+            <span>{customer ? customer.name.split(" ")[0] : "Entrar"}</span>
+          </Link>
           <Link
             href="/carrinho"
             className="relative flex items-center gap-1.5 font-medium hover:text-brand"
