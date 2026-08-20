@@ -7,9 +7,13 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { createCustomerSession, destroyCustomerSession } from "@/lib/customerSession";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { checkRateLimit, formatRetryAfter, getClientIp } from "@/lib/rateLimit";
 
 export type AuthFormState = { error?: string } | undefined;
 export type RequestResetState = { error?: string; success?: boolean } | undefined;
+
+const LOGIN_MAX_ATTEMPTS = 5;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 
 async function getOrigin() {
   const headersList = await headers();
@@ -54,6 +58,14 @@ export async function login(
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
   const redirectTo = safeRedirectPath(formData.get("redirect"));
+
+  const ip = await getClientIp();
+  const rateLimit = checkRateLimit(`customer-login:${ip}:${email}`, LOGIN_MAX_ATTEMPTS, LOGIN_WINDOW_MS);
+  if (!rateLimit.allowed) {
+    return {
+      error: `Muitas tentativas. Tente novamente em ${formatRetryAfter(rateLimit.retryAfterSeconds)}.`,
+    };
+  }
 
   const customer = await prisma.customer.findUnique({ where: { email } });
   if (!customer || !(await verifyPassword(password, customer.passwordHash))) {
