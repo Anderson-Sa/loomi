@@ -1,9 +1,45 @@
 # Loomi
 
-Loja de roupas construída com Next.js (App Router), Prisma e Stripe. Catálogo por
-público (feminino/masculino/infantil), carrinho, checkout com cupons e campanhas,
-conta de cliente e um painel de admin para produtos, pedidos, categorias, campanhas,
-cupons e financeiro.
+Loja de roupas completa construída com **Next.js**, **Prisma** e **Stripe** — catálogo,
+carrinho, checkout com cupons e campanhas, conta de cliente e um painel de administração
+para gerenciar produtos, pedidos, categorias, campanhas, cupons e financeiro.
+
+[![CI](https://github.com/Anderson-Sa/loomi/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Anderson-Sa/loomi/actions/workflows/ci.yml)
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white)
+![Stripe](https://img.shields.io/badge/Stripe-Checkout-635BFF?logo=stripe&logoColor=white)
+![License](https://img.shields.io/badge/uso-privado-lightgrey)
+
+## Sumário
+
+- [Funcionalidades](#funcionalidades)
+- [Stack](#stack)
+- [Como rodar localmente](#como-rodar-localmente)
+- [Variáveis de ambiente](#variáveis-de-ambiente)
+- [Scripts](#scripts)
+- [Testes](#testes)
+- [Estrutura do projeto](#estrutura-do-projeto)
+- [Deploy](#deploy)
+- [Antes de ir para produção](#antes-de-ir-para-produção)
+
+## Funcionalidades
+
+**Loja**
+- Catálogo com busca e navegação por público (feminino, masculino, infantil)
+- Carrinho persistente, cupons de desconto e campanhas promocionais
+- Checkout via Stripe com confirmação de pedido por e-mail (Resend)
+- SEO básico: `sitemap.xml`, `robots.txt` e metadados por página
+
+**Conta do cliente**
+- Cadastro, login e recuperação de senha
+- Histórico de pedidos
+- Rate limiting contra força bruta no login
+
+**Painel administrativo** (`/admin`)
+- Gestão de produtos, categorias, campanhas e cupons
+- Acompanhamento de pedidos e visão financeira
+- Acesso protegido por sessão, com rate limiting no login
 
 ## Stack
 
@@ -11,9 +47,10 @@ cupons e financeiro.
 - [Prisma 7](https://prisma.io) com SQLite local (`@prisma/adapter-better-sqlite3`)
 - [Stripe](https://stripe.com) para checkout e webhooks de pagamento
 - [Resend](https://resend.com) para e-mails transacionais (confirmação de pedido, redefinição de senha)
+- [Vitest](https://vitest.dev) para testes unitários
 - Tailwind CSS v4
 
-## Getting started
+## Como rodar localmente
 
 1. Instale as dependências:
 
@@ -69,23 +106,42 @@ Todas estão documentadas em [`.env.example`](.env.example). Resumo:
 
 ## Scripts
 
-```bash
-npm run dev        # servidor de desenvolvimento
-npm run build       # build de produção
-npm run start       # serve o build de produção
-npm run lint         # ESLint
-npm run typecheck    # checagem de tipos (tsc --noEmit)
-npm test             # testes unitários (Vitest)
-npm run db:seed      # popula o banco com dados de exemplo
-```
+| Comando | Descrição |
+| --- | --- |
+| `npm run dev` | Servidor de desenvolvimento |
+| `npm run build` | Build de produção |
+| `npm run start` | Serve o build de produção |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | Checagem de tipos (`tsc --noEmit`) |
+| `npm test` | Testes unitários (Vitest) |
+| `npm run db:seed` | Popula o banco com dados de exemplo |
 
 ## Testes
 
-Testes unitários cobrem a lógica de precificação e cupons (`src/lib/pricing.ts`,
-`src/lib/coupon.ts`), que envolvem cálculo de valores cobrados no checkout:
+Testes unitários cobrem a lógica de precificação, cupons e rate limiting
+(`src/lib/pricing.ts`, `src/lib/coupon.ts`, `src/lib/rateLimit.ts`), que envolvem
+cálculo de valores cobrados no checkout e proteção contra abuso:
 
 ```bash
 npm test
+```
+
+Todo push e pull request para `main` roda lint, typecheck, testes e build via
+[GitHub Actions](.github/workflows/ci.yml).
+
+## Estrutura do projeto
+
+```
+src/
+├── app/
+│   ├── (store)/    # páginas públicas da loja (catálogo, produto, carrinho, conta, checkout)
+│   ├── admin/       # painel administrativo (protegido por sessão de admin)
+│   └── api/         # rotas de API (checkout, validação de cupom, webhook do Stripe)
+├── components/       # componentes de UI compartilhados
+├── context/          # contextos React (carrinho, cliente)
+└── lib/               # lógica de domínio (preço, cupom, sessão, e-mail, upload, rate limit)
+prisma/
+└── schema.prisma      # modelo de dados
 ```
 
 ## Deploy
@@ -98,10 +154,15 @@ Postgres, Supabase, Neon) e ajuste o `provider` do datasource em `prisma/schema.
 Configure também o webhook do Stripe (`/api/webhooks/stripe`) apontando para o domínio
 de produção e use as chaves live do Stripe e da Resend.
 
-## Estrutura
+## Antes de ir para produção
 
-- `src/app/(store)` — páginas públicas da loja (catálogo, produto, carrinho, conta, checkout)
-- `src/app/admin` — painel administrativo (protegido por sessão de admin)
-- `src/app/api` — rotas de API (checkout, validação de cupom, webhook do Stripe)
-- `src/lib` — lógica de domínio (preço, cupom, sessão, e-mail, upload, etc.)
-- `prisma/schema.prisma` — modelo de dados
+Itens que hoje usam dados de placeholder/teste e precisam ser revisados com o cliente
+antes do lançamento:
+
+- [ ] Substituir os textos entre colchetes das páginas legais (termos de uso, política
+      de privacidade, trocas e devoluções) por dados reais da empresa, revisados por
+      um advogado
+- [ ] Confirmar nome da marca e aplicar identidade visual definitiva (logo/favicon)
+- [ ] Trocar `ADMIN_PASSWORD` por uma senha forte definida com o cliente
+- [ ] Migrar `DATABASE_URL` de SQLite para Postgres (veja [Deploy](#deploy))
+- [ ] Trocar chaves de teste do Stripe/Resend pelas chaves de produção do cliente
