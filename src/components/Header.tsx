@@ -77,7 +77,7 @@ export function Header() {
       </div>
 
       <div className="border-t border-neutral-200">
-        <nav className="mx-auto flex max-w-6xl items-center gap-6 overflow-x-auto px-6 py-2.5 text-sm font-semibold uppercase tracking-wide">
+        <nav className="mx-auto flex max-w-6xl items-center justify-center gap-6 overflow-x-auto px-6 py-2.5 text-sm font-semibold uppercase tracking-wide">
           <Link href="/" className="shrink-0 text-neutral-800 hover:text-brand">
             Vitrine
           </Link>
