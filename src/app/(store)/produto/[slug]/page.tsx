@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { formatInstallments, formatPriceCents } from "@/lib/format";
 import { getAudienceName } from "@/lib/audience";
+import { getEffectivePriceCents } from "@/lib/pricing";
 import { AddToCartForm } from "@/components/AddToCartForm";
 
 export default async function ProdutoPage({
@@ -13,12 +14,14 @@ export default async function ProdutoPage({
 
   const produto = await prisma.product.findUnique({
     where: { slug },
-    include: { category: true },
+    include: { category: true, campaign: true },
   });
 
   if (!produto) notFound();
 
   const sizes = produto.sizes.split(",").map((s) => s.trim());
+  const effectivePriceCents = getEffectivePriceCents(produto);
+  const onSale = effectivePriceCents < produto.priceCents;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
@@ -53,11 +56,18 @@ export default async function ProdutoPage({
             {produto.category.name}
           </p>
           <h1 className="mt-1 text-2xl font-semibold">{produto.name}</h1>
-          <p className="mt-3 text-3xl font-bold text-brand">
-            {formatPriceCents(produto.priceCents)}
-          </p>
+          <div className="mt-3 flex items-baseline gap-3">
+            {onSale && (
+              <span className="text-lg text-neutral-400 line-through">
+                {formatPriceCents(produto.priceCents)}
+              </span>
+            )}
+            <span className="text-3xl font-bold text-brand">
+              {formatPriceCents(effectivePriceCents)}
+            </span>
+          </div>
           <p className="mt-1 text-sm text-neutral-500">
-            {formatInstallments(produto.priceCents)}
+            {formatInstallments(effectivePriceCents)}
           </p>
           <p className="mt-4 text-sm leading-relaxed text-neutral-600">
             {produto.description}
@@ -69,7 +79,7 @@ export default async function ProdutoPage({
               slug={produto.slug}
               name={produto.name}
               imageUrl={produto.imageUrl}
-              priceCents={produto.priceCents}
+              priceCents={effectivePriceCents}
               sizes={sizes}
             />
           </div>
