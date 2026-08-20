@@ -5,12 +5,16 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 
 export default function SucessoPage() {
-  const { clear } = useCart();
+  const { clear, hydrated } = useCart();
 
   useEffect(() => {
-    clear();
+    // Só limpa depois que o carrinho terminou de ler o localStorage — chamar
+    // clear() antes disso é sobrescrito pela hidratação, que roda em seguida
+    // (o efeito de hidratação do CartProvider, componente ancestor, dispara
+    // depois do efeito desta página numa navegação completa vinda do Stripe).
+    if (hydrated) clear();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [hydrated]);
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-24 text-center">
