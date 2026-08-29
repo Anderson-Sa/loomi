@@ -9,7 +9,7 @@ para gerenciar produtos, pedidos, categorias, campanhas, cupons e financeiro.
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
 ![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white)
 ![Stripe](https://img.shields.io/badge/Stripe-Checkout-635BFF?logo=stripe&logoColor=white)
-![License](https://img.shields.io/badge/uso-privado-lightgrey)
+![Vitest](https://img.shields.io/badge/tested%20with-Vitest-6E9F18?logo=vitest&logoColor=white)
 
 ## Sumário
 
@@ -22,6 +22,7 @@ para gerenciar produtos, pedidos, categorias, campanhas, cupons e financeiro.
 - [Estrutura do projeto](#estrutura-do-projeto)
 - [Deploy](#deploy)
 - [Antes de ir para produção](#antes-de-ir-para-produção)
+- [Licença](#licença)
 
 ## Funcionalidades
 
@@ -166,3 +167,9 @@ antes do lançamento:
 - [ ] Trocar `ADMIN_PASSWORD` por uma senha forte definida com o cliente
 - [ ] Migrar `DATABASE_URL` de SQLite para Postgres (veja [Deploy](#deploy))
 - [ ] Trocar chaves de teste do Stripe/Resend pelas chaves de produção do cliente
+
+## Licença
+
+Código aberto para fins de portfólio e estudo — sinta‑se à vontade para explorar,
+rodar localmente e se inspirar. Sem licença de código aberto formal atribuída; para
+reuso em outro projeto, entre em contato.
